@@ -9,7 +9,7 @@ use warnings;
 use utf8;
 use Glib qw/TRUE FALSE/;
 
-plan tests => 40;
+plan tests => 42;
 
 my $table = Gtk3::TextTagTable -> new();
 
@@ -158,3 +158,18 @@ $buffer -> end_user_action();
   my $mark = Gtk3::TextMark -> new('bla', TRUE);
   $buffer -> add_mark($mark, $end->());
 }
+
+{
+  # test forward_find_char
+  # fails on Glib::Object::Introspection 0.015 with the following:
+  #   "Unhandled info tag 21 in raw_to_arg"
+  use utf8;
+  my $buf = Gtk3::TextBuffer -> new();
+  $buf->set_text('v年x最y');
+  my ($s,$e) = $buf->get_bounds;
+  $s->forward_find_char( sub{shift eq '年'} );
+  is($s->get_char, '年');
+  $e->backward_find_char( sub{shift eq '%'},undef, $s);
+  is($e->get_char, '年');
+}
+
